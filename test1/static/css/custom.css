@@ -1,0 +1,11 @@
+.hero-section {
+    background-color: #1e1e1e;
+    color: white;
+    padding: 50px;
+    border-radius: 10px;
+}
+
+.feature-item i {
+    font-size: 2rem;
+    color: #007bff;
+}

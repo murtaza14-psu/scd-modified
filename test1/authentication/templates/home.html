@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<main class="container my-4">
+    <!-- Home Section -->
+    <section id="home" class="section active">
+        <div class="hero-section text-center py-5">
+            <h1 class="display-4 mb-4">Make a Difference in Your Community</h1>
+            <p class="lead mb-4">Connect with NGOs and find meaningful volunteer opportunities</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center logged-out">
+                <a href="{% url 'authentication:register' %}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
+                <a href="{% url 'authentication:login' %}" class="btn btn-outline-secondary btn-lg px-4">Sign In</a>
+            </div>
+        </div>
+
+        <div class="featured-images py-5">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <img src="{% static 'images/img1.jpeg' %}" class="img-fluid rounded" alt="Volunteering">
+                </div>
+                <div class="col-md-4">
+                    <img src="{% static 'images/img2.jpeg' %}" class="img-fluid rounded" alt="NGO Work">
+                </div>
+                <div class="col-md-4">
+                    <img src="{% static 'images/img3.jpeg' %}" class="img-fluid rounded" alt="Community Service">
+                </div>
+            </div>
+        </div>
+
+        <section class="features py-5">
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="feature-item">
+                        <i data-feather="users" class="mb-3"></i>
+                        <h3>Connect with NGOs</h3>
+                        <p>Find organizations that match your interests and values</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-item">
+                        <i data-feather="calendar" class="mb-3"></i>
+                        <h3>Flexible Scheduling</h3>
+                        <p>Choose opportunities that fit your availability</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-item">
+                        <i data-feather="heart" class="mb-3"></i>
+                        <h3>Track Impact</h3>
+                        <p>See the difference you're making in your community</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+</main>
+{% endblock %}

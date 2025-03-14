@@ -10,50 +10,232 @@
         <div class="hero-section text-center py-5">
             <h1 class="display-4 mb-4">Make a Difference in Your Community</h1>
             <p class="lead mb-4">Connect with NGOs and find meaningful volunteer opportunities</p>
+            {% if not request.user.is_authenticated %}
             <div class="d-grid gap-2 d-sm-flex justify-content-sm-center logged-out">
                 <a href="{% url 'authentication:register' %}" class="btn btn-primary btn-lg px-4 gap-3">Get Started</a>
                 <a href="{% url 'authentication:login' %}" class="btn btn-outline-secondary btn-lg px-4">Sign In</a>
             </div>
+            {% endif %}
         </div>
 
+        <!-- Featured Images -->
         <div class="featured-images py-5">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <img src="{% static 'images/img1.jpeg' %}" class="img-fluid rounded" alt="Volunteering">
+                    <img src="{% static 'images/img1.jpeg' %}" class="img-fluid rounded w-100"
+                         style="height:250px; object-fit:cover;" alt="Volunteering">
                 </div>
                 <div class="col-md-4">
-                    <img src="{% static 'images/img2.jpeg' %}" class="img-fluid rounded" alt="NGO Work">
+                    <img src="{% static 'images/img2.jpeg' %}" class="img-fluid rounded w-100"
+                         style="height:250px; object-fit:cover;" alt="NGO Work">
                 </div>
                 <div class="col-md-4">
-                    <img src="{% static 'images/img3.jpeg' %}" class="img-fluid rounded" alt="Community Service">
+                    <img src="{% static 'images/img3.jpeg' %}" class="img-fluid rounded w-100"
+                         style="height:250px; object-fit:cover;" alt="Community Service">
                 </div>
             </div>
         </div>
 
-        <section class="features py-5">
-            <div class="row g-4 text-center">
+
+        <!-- Upcoming Events -->
+        <section class="upcoming-events py-5">
+            <h2 class="text-center mb-4">Upcoming Events</h2>
+            <div class="row g-4">
+                {% for event in upcoming_events %}
                 <div class="col-md-4">
-                    <div class="feature-item">
-                        <i data-feather="users" class="mb-3"></i>
-                        <h3>Connect with NGOs</h3>
-                        <p>Find organizations that match your interests and values</p>
+                    <div class="card shadow">
+                        <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            <p class="card-text">{{ event.date }} | {{ event.location }}</p>
+                            <a href="{% url 'event_detail' event.id %}" class="btn btn-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="feature-item">
-                        <i data-feather="calendar" class="mb-3"></i>
-                        <h3>Flexible Scheduling</h3>
-                        <p>Choose opportunities that fit your availability</p>
+                {% empty %}
+                <p class="text-center">No upcoming events at the moment.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="testimonials py-5 bg-datk">
+            <div class="container">
+                <h2 class="text-center mb-5 text-light">What Our Volunteers Say</h2>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card shadow border-0 h-100" style="background-color: #e9edef; border-radius: 12px;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
+                                <blockquote class="blockquote">
+                                    <p class="mb-3 text-dark">"VolunteerConnect helped me to find an NGO that truly
+                                        aligns with my passion!"</p>
+                                    <footer class="blockquote-footer py-3">Ayesha, <cite
+                                            title="Volunteer">Volunteer</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="feature-item">
-                        <i data-feather="heart" class="mb-3"></i>
-                        <h3>Track Impact</h3>
-                        <p>See the difference you're making in your community</p>
+                    <div class="col-md-4">
+                        <div class="card shadow border-0 h-100" style="background-color: #e9ecef; border-radius: 12px;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-handshake fa-3x text-success mb-3"></i>
+                                <blockquote class="blockquote">
+                                    <p class="mb-3 text-dark">"Managing volunteers has never been easier. This platform
+                                        is a game-changer!"</p>
+                                    <footer class="blockquote-footer py-3">Shahid, <cite title="NGO Coordinator">NGO
+                                        Coordinator</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card shadow border-0 h-100" style="background-color: #dee2e6; border-radius: 12px;">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                                <blockquote class="blockquote">
+                                    <p class="mb-3 text-dark">"The impact tracking feature is fantastic! I love seeing
+                                        my contribution grow."</p>
+                                    <footer class="blockquote-footer py-3">Bilal, <cite
+                                            title="Volunteer">Volunteer</cite></footer>
+                                </blockquote>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </section>
+
+
+        <!-- How It Works -->
+        <section class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-container text-center">
+                    <i class="bi bi-people-fill fs-1 text-primary"></i>
+                    <h3 class="mt-2">Volunteers</h3>
+                    <p class="text-light">Join our community of changemakers</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-container text-center">
+                    <i class="bi bi-building fs-1 text-info"></i>
+                    <h3 class="mt-2">NGOs</h3>
+                    <p class="text-light">Partner with dedicated volunteers</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-container text-center">
+                    <i class="bi bi-hand-thumbs-up-fill fs-1 text-success"></i>
+                    <h3 class="mt-2">Impact</h3>
+                    <p class="text-light">Create positive change together</p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- FAQ -->
+        <section class="faq py-5">
+            <h2 class="text-center mb-4">Frequently Asked Questions</h2>
+            <div class="accordion" id="faqAccordion">
+                <!-- Question 1 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            How do I sign up?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Click the "Get Started" button and complete your profile.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Is there a fee to join VolunteerConnect?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            No, VolunteerConnect is completely free for both volunteers and NGOs.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            How can I find volunteer opportunities?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You can browse opportunities by category, location, or date on the platform.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 4 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            How do NGOs post volunteer opportunities?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            NGOs can register, verify their accounts, and post opportunities through their dashboard.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 5 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                            Can I track my volunteering hours?
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes! Your dashboard tracks your completed events and total volunteering hours.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                            What happens after I apply for an opportunity?
+                        </button>
+                    </h2>
+                    <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            NGOs review applications and will notify you if you're selected.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question 9 -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq9">
+                            How do I update my profile?
+                        </button>
+                    </h2>
+                    <div id="faq9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You can update your profile details, skills, and availability from the "My Profile" section.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
         </section>
     </section>
 </main>

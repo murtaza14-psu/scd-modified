@@ -9,3 +9,21 @@
     font-size: 2rem;
     color: #007bff;
 }
+html, body {
+            height: 100%;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Ensure full height */
+
+        }
+
+        .content {
+            flex: 1; /* Pushes footer down */
+        }
+
+        footer {
+            width: 100%;
+        }

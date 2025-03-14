@@ -11,13 +11,7 @@
                 <div class="card-body p-4">
                     <h2 class="text-center mb-4">Create Account</h2>
                     
-                    {% if messages %}
-                        <div class="alert alert-danger">
-                            {% for message in messages %}
-                                {{ message }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+
 
                     <form method="POST">
 
@@ -25,7 +19,7 @@
                             <div class="alert alert-danger">
                                 <ul>
                                     {% for field, errors in form.errors.items %}
-                                        <li><strong>{{ field|title }}</strong>: 
+                                        <li>
                                             {% for error in errors %}
                                                 {{ error }}
                                             {% endfor %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Create Opportunity{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Create New Opportunity</h2>
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label required-field">
+                            {{ form.title.label }}
+                        </label>
+                        {{ form.title }}
+                        {% for error in form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label required-field">
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.location.id_for_label }}" class="form-label required-field">
+                            {{ form.location.label }}
+                        </label>
+                        {{ form.location }}
+                        {% for error in form.location.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.date.id_for_label }}" class="form-label required-field">
+                            {{ form.date.label }}
+                        </label>
+                        {{ form.date }}
+                        <small class="text-muted">Select date and time for the opportunity</small>
+                        {% for error in form.date.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.required_skills.id_for_label }}" class="form-label">
+                            {{ form.required_skills.label }}
+                        </label>
+                        {{ form.required_skills }}
+                        {% for error in form.required_skills.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Create Opportunity</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

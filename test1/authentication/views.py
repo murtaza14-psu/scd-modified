@@ -10,6 +10,7 @@ from .models import CustomUser
 def home(request):
     return render(request, 'home.html')  # Render home.html
 
+
 def register(request):
     if request.method == "POST":
         form = RegisterForm(request.POST)
@@ -23,7 +24,8 @@ def register(request):
     else:
         form = RegisterForm()
 
-    return render(request, "register.html", {"form": form})
+    return render(request, "auth/register.html", {"form": form})
+
 
 def custom_login(request):
     if request.method == "POST":
@@ -37,8 +39,18 @@ def custom_login(request):
         else:
             messages.error(request, "Invalid email or password")
 
-    return render(request, "login.html")
+    return render(request, "auth/login.html")
+
 
 def custom_logout(request):
     logout(request)
     return redirect("authentication:index")
+
+
+def opportunities(request):
+    return render(request, 'opportunities/listopportunities.html')
+
+def createOpportunity(request):
+    return render(request, 'opportunities/create.html')
+
+

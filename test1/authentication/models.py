@@ -1,23 +1,73 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils.timezone import now
 
-# superuser:syedmhussain201@gmail.com
-# password: admin
+class UserManager(BaseUserManager):
+    def create_user(self, email, username, name, password=None, role='volunteer'):
+        if not email:
+            raise ValueError("Users must have an email address")
+        if not username:
+            raise ValueError("Users must have a username")
 
-class CustomUser(AbstractUser):
-    USER_TYPE_CHOICES = (
+        user = self.model(email=self.normalize_email(email), username=username, name=name, role=role)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, username, name, password):
+        user = self.create_user(email, username, name, password, role='admin')
+        user.is_superuser = True
+        user.is_staff = True
+        user.save(using=self._db)
+        return user
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = [
         ('volunteer', 'Volunteer'),
         ('ngo', 'NGO'),
-    )
+        ('admin', 'Admin'),
+    ]
+    
+    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150, unique=True)
+    name = models.CharField(max_length=100)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    created_at = models.DateTimeField(default=now)
+    
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)  # Required for Django Admin
+    
+    objects = UserManager()
+    
+    USERNAME_FIELD = 'email'  # Email remains the primary identifier
+    REQUIRED_FIELDS = ['username', 'name']  # Make sure username is required during superuser creation
+    
+    def __str__(self):
+        return self.email
 
-    email = models.EmailField(unique=True)  # Ensure email is unique for login
-    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='volunteer')
-    org_name = models.CharField(max_length=255, blank=True, null=True)
-    org_description = models.TextField(blank=True, null=True)
 
-    username = models.CharField(max_length=150, blank=True, null=True)  # Allow duplicate usernames
-    USERNAME_FIELD = 'email'  # Use email for authentication
-    REQUIRED_FIELDS = ['username', 'user_type']  # Required when creating a user via CLI
+class VolunteerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='volunteer_profile')
+    skills = models.TextField(blank=True, null=True)
+    interests = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return self.email  # Changed to email since username is non-unique
+        return self.user.name
+
+class NGOProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='ngo_profile')
+    organization_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    verified = models.BooleanField(default=False)
+    verification_status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='pending'
+    )
+    rejection_reason = models.CharField(max_length=100, blank=True, null=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_ngos')
+    
+    def __str__(self):
+        return self.organization_name

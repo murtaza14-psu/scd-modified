@@ -8,6 +8,6 @@ urlpatterns = [
     path('login/', views.custom_login, name='login'),
     path('register/', views.register, name='register'),
     path('logout/', views.custom_logout, name='logout'),
-    path('opportunities/', views.opportunities, name='opportunities'),
-    path('createOpportunity/', views.createOpportunity, name='createOpportunity'),
+    # path('opportunities/', views.opportunities, name='opportunities'),
+    # path('createOpportunity/', views.createOpportunity, name='createOpportunity'),
 ]

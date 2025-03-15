@@ -1,11 +1,12 @@
+
+
+
+
+from .forms import RegisterForm
+
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
-from django.contrib.auth import get_user_model
-from .forms import RegisterForm
-from .models import CustomUser
-
 
 def home(request):
     return render(request, 'home.html')  # Render home.html
@@ -17,7 +18,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("authentication:index")  # Redirect after registration
+            return redirect("home")  # Update this redirect if needed
         else:
             print(form.errors)  # Debugging: Print errors in console
             messages.error(request, "Please correct the errors below.")
@@ -35,7 +36,7 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
-            return redirect("authentication:index")  # Redirect to home page
+            return redirect("home")  # Update this redirect if needed
         else:
             messages.error(request, "Invalid email or password")
 
@@ -44,13 +45,11 @@ def custom_login(request):
 
 def custom_logout(request):
     logout(request)
-    return redirect("authentication:index")
-
+    return redirect("home")
 
 def opportunities(request):
-    return render(request, 'opportunities/listopportunities.html')
+    return render(request, "opportunities/listopportunities.html")
 
 def createOpportunity(request):
-    return render(request, 'opportunities/create.html')
-
+    return render(request, "opportunities/create.html")
 

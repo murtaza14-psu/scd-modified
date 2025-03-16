@@ -31,11 +31,11 @@
                         {% csrf_token %}
                         <div class="mb-3">
                             <label class="form-label">I am a:</label>
-                            {{ form.user_type }}
+                            {{ form.role}}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Full Name</label>
-                            {{ form.username }}
+                            {{ form.name }}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email address</label>
@@ -70,5 +70,33 @@
         </div>
     </div>
 </section>
-<script src="{% static 'js/main.js' %}"></script>
+<!-- <script src="{% static 'js/main.js' %}"></script> -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("JavaScript loaded"); // Debugging
+    
+        const userTypeSelect = document.getElementById("id_role");
+        const ngoFields = document.getElementById("ngoFields");
+    
+        if (userTypeSelect && ngoFields) {
+            console.log("Elements found"); // Debugging
+    
+            function toggleNgoFields() {
+                console.log("Selected role:", userTypeSelect.value); // Debugging
+                if (userTypeSelect.value === "ngo") {
+                    ngoFields.style.display = "block";
+                } else {
+                    ngoFields.style.display = "none";
+                }
+            }
+    
+            userTypeSelect.addEventListener("change", toggleNgoFields);
+            toggleNgoFields(); // Ensure fields show/hide on page load
+        } else {
+            console.error("User type select or NGO fields not found!");
+        }
+    });
+    </script>
+    
 {% endblock %}

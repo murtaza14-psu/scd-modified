@@ -18,7 +18,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("home")  # Update this redirect if needed
+            return redirect("authentication:home")  # Update this redirect if needed
         else:
             print(form.errors)  # Debugging: Print errors in console
             messages.error(request, "Please correct the errors below.")
@@ -36,7 +36,7 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
-            return redirect("home")  # Update this redirect if needed
+            return redirect("authentication:home")  # Update this redirect if needed
         else:
             messages.error(request, "Invalid email or password")
 
@@ -45,7 +45,7 @@ def custom_login(request):
 
 def custom_logout(request):
     logout(request)
-    return redirect("home")
+    return redirect("authentication:home")
 
 def opportunities(request):
     return render(request, "opportunities/listopportunities.html")

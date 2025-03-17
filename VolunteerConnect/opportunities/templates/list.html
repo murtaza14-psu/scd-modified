@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Opportunities{% endblock %}
+
+{% block content %}
+<main class="container my-4">
+    <section class="opportunities-list py-5">
+        <h2 class="text-center mb-4">Available Opportunities</h2>
+
+        {% if opportunities %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for opportunity in opportunities %}
+                    <div class="col">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ opportunity.title }}</h5>
+                                <p class="card-text">
+                                    <strong>Location:</strong> {{ opportunity.location }}<br>
+                                    <strong>Date:</strong> {{ opportunity.date|date:"F d, Y" }}
+                                </p>
+                                <p class="card-text text-muted">
+                                    {{ opportunity.description|truncatechars:100 }}
+                                </p>
+                                
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center">
+                <p class="lead text-muted">No available opportunities at the moment.</p>
+            </div>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

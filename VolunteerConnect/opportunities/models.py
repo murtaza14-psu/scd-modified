@@ -2,6 +2,11 @@ from django.db import models
 from django.utils.timezone import now
 from authentication.models import NGOProfile
 
+#lm@m.com 
+#pass: andaywala123
+
+
+
 class Opportunity(models.Model):
     STATUS_CHOICES = [
         ('open', 'Open'),

@@ -35,13 +35,13 @@
                     <a class="nav-link" href="{% url 'authentication:opportunities' %}">Opportunities</a>
                 </li>
                     {% if request.user.is_authenticated %}
-                        {% if request.user.user_type == 'volunteer' %}
+                        {% if request.user.role == 'volunteer' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="">
                                     <i class="bi bi-clock-history"></i> My History
                                 </a>
                             </li>
-                        {% elif request.user.user_type == 'ngo' %}
+                        {% elif request.user.role == 'ngo' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'authentication:createOpportunity' %}">
                                     <i class="bi bi-plus-circle"></i> Create Opportunity
@@ -56,18 +56,25 @@
                         {% endif %}
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav">
                     {% if request.user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'authentication:logout' %}">Logout</a>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ request.user.name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'authentication:logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'authentication:login' %}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'authentication:register' %}">Register</a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'authentication:login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'authentication:register' %}">Register</a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>

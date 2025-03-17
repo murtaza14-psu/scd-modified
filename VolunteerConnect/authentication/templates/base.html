@@ -32,7 +32,7 @@
                     <a class="nav-link" href="{% url 'authentication:home' %}" >Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'authentication:opportunities' %}">Opportunities</a>
+                    <a class="nav-link" href="{% url 'opportunities:opportunities' %}">Opportunities</a>
                 </li>
                     {% if request.user.is_authenticated %}
                         {% if request.user.role == 'volunteer' %}
@@ -43,7 +43,7 @@
                             </li>
                         {% elif request.user.role == 'ngo' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'authentication:createOpportunity' %}">
+                                <a class="nav-link" href="{% url 'opportunities:createOpportunity' %}">
                                     <i class="bi bi-plus-circle"></i> Create Opportunity
                                 </a>
                             </li>

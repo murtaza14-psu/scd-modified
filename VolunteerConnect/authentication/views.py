@@ -47,9 +47,5 @@ def custom_logout(request):
     logout(request)
     return redirect("authentication:home")
 
-def opportunities(request):
-    return render(request, "opportunities/listopportunities.html")
 
-def createOpportunity(request):
-    return render(request, "opportunities/create.html")
 

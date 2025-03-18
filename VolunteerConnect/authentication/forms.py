@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from .models import User
+from .models import *
 
 class RegisterForm(UserCreationForm):
     role = forms.ChoiceField(
@@ -61,9 +61,19 @@ class RegisterForm(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
-        """ Override save() to auto-generate a username """
+        """Override save() to auto-generate a username and create NGOProfile if applicable"""
         user = super().save(commit=False)
         user.username = user.email.split('@')[0]  # Generate username from email
+
         if commit:
             user.save()
+
+            # Automatically create NGOProfile if role is 'ngo'
+            if user.role == "ngo":
+                NGOProfile.objects.create(
+                    user=user,
+                    organization_name=self.cleaned_data["org_name"],
+                    description=self.cleaned_data["org_description"]
+                )
+
         return user

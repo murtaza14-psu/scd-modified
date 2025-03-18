@@ -12,6 +12,10 @@ class UserManager(BaseUserManager):
         user = self.model(email=self.normalize_email(email), username=username, name=name, role=role)
         user.set_password(password)
         user.save(using=self._db)
+
+        if role == 'ngo':
+            NGOProfile.objects.create(user=user)
+
         return user
     
     def create_superuser(self, email, username, name, password):
@@ -68,6 +72,23 @@ class NGOProfile(models.Model):
     rejection_reason = models.CharField(max_length=100, blank=True, null=True)
     verified_at = models.DateTimeField(blank=True, null=True)
     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_ngos')
+
+
+#logic for if admin changes the status to rejected then the opportunities of the logged in 
+#ngos are deleted
+    def save(self, *args, **kwargs):
+        # Check if the verification_status changed to 'rejected'
+        if self.pk:  # Ensure this is not a new instance
+            previous_status = NGOProfile.objects.get(pk=self.pk).verification_status
+            if previous_status != "rejected" and self.verification_status == "rejected":
+                self.delete_opportunities()
+
+        super().save(*args, **kwargs)
+
+    def delete_opportunities(self):
+        """Delete all opportunities created by this NGO when rejected."""
+        from opportunities.models import Opportunity  # Import inside function to avoid circular import
+        Opportunity.objects.filter(ngo=self).delete()
     
     def __str__(self):
         return self.organization_name

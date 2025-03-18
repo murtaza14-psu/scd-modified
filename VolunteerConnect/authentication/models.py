@@ -74,21 +74,26 @@ class NGOProfile(models.Model):
     verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_ngos')
 
 
-#logic for if admin changes the status to rejected then the opportunities of the logged in 
-#ngos are deleted
     def save(self, *args, **kwargs):
-        # Check if the verification_status changed to 'rejected'
-        if self.pk:  # Ensure this is not a new instance
+        if self.pk:  # Ensure this is an existing instance
             previous_status = NGOProfile.objects.get(pk=self.pk).verification_status
             if previous_status != "rejected" and self.verification_status == "rejected":
                 self.delete_opportunities()
+                self.delete_ngo()
 
         super().save(*args, **kwargs)
 
     def delete_opportunities(self):
-        """Delete all opportunities created by this NGO when rejected."""
+        """Delete all opportunities created by this NGO."""
         from opportunities.models import Opportunity  # Import inside function to avoid circular import
         Opportunity.objects.filter(ngo=self).delete()
-    
+
+    def delete_ngo(self):
+        """Delete the NGO profile and optionally the user account."""
+        user = self.user
+        self.delete()  # Delete the NGO profile
+        user.is_active = False  # Delete the associated user account (so they cannot log in)
+        user.save
+
     def __str__(self):
         return self.organization_name

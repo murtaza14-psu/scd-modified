@@ -39,3 +39,7 @@ def apply_opportunity(request, opportunity_id):
         "form": form,
         "opportunity": opportunity
     })
+
+def manage_opportunity(request, opportunity_id):
+    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
+    return render(request, 'applications/manage_opportunity.html', {'opportunity': opportunity})

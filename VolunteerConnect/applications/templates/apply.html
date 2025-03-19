@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Opportunity{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Apply for "{{ opportunity.title }}"</h2>
+                
+                <div class="mb-4">
+                    <h5 class="text-info">
+                        <i class="bi bi-building"></i> {{ opportunity.ngo.organization_name }}
+                        {% if opportunity.ngo.verified %}
+                            <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified NGO"></i>
+                        {% endif %}
+                    </h5>
+                    <p>{{ opportunity.description }}</p>
+                    <div class="text-muted">
+                        <p><i class="bi bi-geo-alt text-info"></i> Location: {{ opportunity.location }}</p>
+                        <p><i class="bi bi-calendar text-info"></i> Date: {{ opportunity.date|date:"Y-m-d H:i" }}</p>
+                        {% if opportunity.required_skills %}
+                        <p><i class="bi bi-tools text-info"></i> Required Skills: {{ opportunity.required_skills }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        {{ form.message.label_tag }}
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                            {% for error in form.message.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Submit Application</button>
+                        <a href="{% url 'opportunities:opportunities' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

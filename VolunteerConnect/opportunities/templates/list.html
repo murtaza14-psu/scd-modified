@@ -1,38 +1,133 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Opportunities{% endblock %}
 
 {% block content %}
-<main class="container my-4">
-    <section class="opportunities-list py-5">
-        <h2 class="text-center mb-4">Available Opportunities</h2>
-
-        {% if opportunities %}
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {% for opportunity in opportunities %}
-                    <div class="col">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary">{{ opportunity.title }}</h5>
-                                <p class="card-text">
-                                    <strong>Location:</strong> {{ opportunity.location }}<br>
-                                    <strong>Date:</strong> {{ opportunity.date|date:"F d, Y" }}
-                                </p>
-                                <p class="card-text text-muted">
-                                    {{ opportunity.description|truncatechars:100 }}
-                                </p>
-                                
-                            </div>
-                        </div>
-                    </div>
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2>Volunteer Opportunities</h2>
+    </div>
+    <div class="col-md-6">
+        <div class="input-group mb-3">
+            <input type="text" id="opportunity-search" class="form-control" 
+                   placeholder="Search by title or description...">
+            <select id="location-filter" class="form-select">
+                <option value="">All Locations</option>
+                {% for location in locations %}
+                <option value="{{ location }}">{{ location }}</option>
                 {% endfor %}
+            </select>
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for opportunity in opportunities %}
+    <div class="col-md-6 col-lg-4 opportunity-card" data-location="{{ opportunity.location }}">
+        <div class="card h-100 border-primary bg-dark">
+            <div class="card-header bg-primary bg-opacity-25 border-primary">
+                <h5 class="card-title mb-0">{{ opportunity.title }}</h5>
             </div>
-        {% else %}
-            <div class="text-center">
-                <p class="lead text-muted">No available opportunities at the moment.</p>
+            <div class="card-body">
+                <p class="mb-2"><strong>Organization:</strong> {{ opportunity.ngo.organization_name }}</p>
+                <p class="mb-2"><strong>Date:</strong> {{ opportunity.date|date:"M d, Y \a\t h:i A" }}</p>
+                <p class="mb-2"><strong>Location:</strong> {{ opportunity.location }}</p>
+                <p class="mb-3">{{ opportunity.description|truncatechars:150 }}</p>
+                
+                <div class="d-flex justify-content-between">
+                    {% if user.is_authenticated and user.groups.all.0.name == 'volunteer' %}
+                        <a href="{% url 'applications:apply_opportunity' opportunity.id %}" 
+                           class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Apply
+                        </a>
+                    {% elif user.is_authenticated and user.groups.all.0.name == 'ngo' %}
+                        {% if opportunity.ngo_id == user.ngo_profile.id %}
+                            <!-- If the NGO owns the opportunity -->
+                            <a href="{% url 'applications:review_applications' opportunity.id %}" 
+                               class="btn btn-info">
+                                <i class="bi bi-list-check"></i> Review Applications
+                            </a>
+                        {% else %}
+                            <!-- If the NGO does NOT own the opportunity -->
+                            <button class="btn btn-secondary" onclick="showOwnershipMessage()">
+                                <i class="bi bi-exclamation-circle"></i> Not Your Opportunity
+                            </button>
+                        {% endif %}
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary">
+                            Login to Apply
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-        {% endif %}
-    </section>
-</main>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-info">
+                    {{ opportunity.ngo.organization_name }}
+                    {% if opportunity.ngo.verified %}
+                        <i class="bi bi-patch-check-fill text-primary" title="Verified NGO"></i>
+                    {% endif %}
+                </h6>
+                <p class="card-text">{{ opportunity.description }}</p>
+                <div class="mb-3">
+                    <small class="text-muted d-block">
+                        <i class="bi bi-geo-alt text-info"></i> {{ opportunity.location }}
+                    </small>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-calendar text-info"></i> {{ opportunity.date|date:"Y-m-d H:i" }}
+                    </small>
+                    {% if opportunity.required_skills %}
+                    <small class="text-muted d-block">
+                        <i class="bi bi-tools text-info"></i> Required Skills: {{ opportunity.required_skills }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p>No opportunities available at the moment.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('opportunity-search');
+    const locationSelect = document.getElementById('location-filter');
+    const opportunities = document.querySelectorAll('.opportunity-card');
+
+    function filterOpportunities() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedLocation = locationSelect.value;
+
+        opportunities.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            const description = card.querySelector('.card-text').textContent.toLowerCase();
+            const location = card.dataset.location;
+
+            const matchesSearch = !searchTerm || 
+                                title.includes(searchTerm) || 
+                                description.includes(searchTerm);
+            const matchesLocation = !selectedLocation || 
+                                  location === selectedLocation;
+
+            card.style.display = (matchesSearch && matchesLocation) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterOpportunities);
+    locationSelect.addEventListener('change', filterOpportunities);
+});
+
+function showOwnershipMessage() {
+    alert("You cannot review applications for an opportunity that does not belong to your organization.");
+}
+</script>
 {% endblock %}

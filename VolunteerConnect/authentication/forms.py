@@ -76,4 +76,7 @@ class RegisterForm(UserCreationForm):
                     description=self.cleaned_data["org_description"]
                 )
 
+            elif user.role == "volunteer":
+                VolunteerProfile.objects.create(user=user)  # Create VolunteerProfile
+
         return user

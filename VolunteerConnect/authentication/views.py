@@ -1,7 +1,3 @@
-
-
-
-
 from .forms import RegisterForm
 
 from django.shortcuts import render, redirect
@@ -47,5 +43,9 @@ def custom_logout(request):
     logout(request)
     return redirect("authentication:home")
 
-
+def profile(request):
+    if request.user.role=="volunteer":
+        return render(request, 'profile/volunteer_profile.html')
+    elif request.user.role=="ngo":
+        return render(request, 'profile/ngo_profile.html')
 

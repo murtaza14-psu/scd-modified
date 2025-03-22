@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 
+{% load custom_filters %}
+
 {% block title %}Manage Attendance - {{ opportunity.title }}{% endblock %}
+
+
+
 
 {% block content %}
 <div class="container">
@@ -34,8 +39,8 @@
                         <tbody>
                             {% for application in applications %}
                                 {% with volunteer=application.volunteer %}
-                                    {% with attendance=attendances.volunteer.id %}
-                                    <tr>
+                               
+                                {% with attendance=attendances|get_attendance:volunteer.id %}
                                         <td>{{ volunteer.user.name }}</td>
                                         <td>
                                             {% if attendance %}
@@ -160,10 +165,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const notes = document.getElementById('notes').value;
         
         fetch(`/applications/check-in/${currentOpportunityId}/${currentVolunteerId}/`, {
-            method: 'POST',
-            headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
-            body: JSON.stringify({status: status, notes: notes})
-        })
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({status: status, notes: notes})
+    })
         .then(response => response.json())
         .then(data => window.location.reload());
     });

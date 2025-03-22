@@ -59,7 +59,6 @@ def manage_opportunity(request, opportunity_id):
 
 @login_required
 def check_in(request, opportunity_id, volunteer_id):
-    """Handles volunteer check-in."""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -67,16 +66,12 @@ def check_in(request, opportunity_id, volunteer_id):
             notes = data.get("notes", "")
 
             opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-            if opportunity:
-                 print(1)
             volunteer = get_object_or_404(VolunteerProfile, id=volunteer_id)
-            if volunteer:
-                 print(2)
 
             attendance, created = Attendance.objects.get_or_create(
                 volunteer=volunteer,
                 opportunity=opportunity,
-                defaults={"status": status, "notes": notes}
+                defaults={"status": status, "notes": notes, "check_in_time": now()}
             )
 
             if not created:
@@ -87,8 +82,9 @@ def check_in(request, opportunity_id, volunteer_id):
 
             return JsonResponse({"success": True, "message": "Checked in successfully!"})
         except Exception as e:
+            print("Error:", e)  # Log error to the console
             return JsonResponse({"success": False, "message": str(e)}, status=400)
-    
+
     return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
 
 

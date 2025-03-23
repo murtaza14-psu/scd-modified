@@ -80,3 +80,19 @@ class RegisterForm(UserCreationForm):
                 VolunteerProfile.objects.create(user=user)  # Create VolunteerProfile
 
         return user
+
+
+class NGOProfileForm(forms.Form):
+    organization_name = forms.CharField(
+        label='Organization Name', 
+        required=True
+    )
+    description = forms.CharField(
+        label='Description', 
+        widget=forms.Textarea, 
+        required=True
+    )
+
+class VolunteerProfileForm(forms.Form):
+    skills = forms.CharField(label='Skills', required=False)
+    interests = forms.CharField(label='Interests', required=False)

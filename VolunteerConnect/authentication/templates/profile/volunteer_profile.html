@@ -17,7 +17,7 @@
             </div>
             <div class="mb-3">
                 <strong><i class="bi bi-calendar"></i> Joined:</strong>
-                <p>{{ request.user.created_at }}</p>
+                <p>{{ request.user.created_at|date:"F d, Y" }}</p>
             </div>
         </div>
     </div>
@@ -26,25 +26,23 @@
         <div class="profile-section">
             <h3 class="mb-4">Profile Information</h3>
             <form method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                {% for hidden_field in form.hidden_fields %}
+                    {{ hidden_field }}
+                {% endfor %}
                 <div class="mb-3">
-                    {{ form.skills.label(class="form-label") }}
-                    {{ form.skills(class="form-control", 
-                                 placeholder="Enter your skills (comma-separated)") }}
-                    {% if form.skills.errors %}
-                        {% for error in form.skills.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
+                    {{ form.skills.label_tag }}
+                    {{ form.skills }}
+                    {% for error in form.skills.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
                 </div>
                 <div class="mb-4">
-                    {{ form.interests.label(class="form-label") }}
-                    {{ form.interests(class="form-control", 
-                                    placeholder="Enter your interests (comma-separated)") }}
-                    {% if form.interests.errors %}
-                        {% for error in form.interests.errors %}
-                            <div class="invalid-feedback d-block">{{ error }}</div>
-                        {% endfor %}
-                    {% endif %}
+                    {{ form.interests.label_tag }}
+                    {{ form.interests }}
+                    {% for error in form.interests.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Update Profile</button>
@@ -54,8 +52,8 @@
 
         <div class="profile-section mt-4">
             <h3 class="mb-4">My Applications</h3>
-            {% if request.user.volunteer_profile.applications %}
-                {% for application in request.user.volunteer_profile.applications %}
+            {% if request.user.volunteer_profile.applications.all %}
+                {% for application in request.user.volunteer_profile.applications.all %}
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">{{ application.opportunity.title }}</h5>
@@ -64,15 +62,11 @@
                         </h6>
                         <p class="card-text">{{ application.message }}</p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-{{ {
-                                'pending': 'warning',
-                                'accepted': 'success',
-                                'rejected': 'danger'
-                            }[application.status] }}">
-                                {{ application.status.title() }}
+                            <span class="badge {% if application.status == 'pending' %}bg-warning{% elif application.status == 'accepted' %}bg-success{% elif application.status == 'rejected' %}bg-danger{% endif %}">
+                                {{ application.status|title }}
                             </span>
                             <small class="text-muted">
-                                Applied on {{ application.created_at.strftime('%Y-%m-%d') }}
+                                Applied on {{ application.created_at|date:"Y-m-d" }}
                             </small>
                         </div>
                     </div>

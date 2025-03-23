@@ -1,17 +1,14 @@
 {% extends "base.html" %}
-
 {% load custom_filters %}
 
+
 {% block title %}Manage Attendance - {{ opportunity.title }}{% endblock %}
-
-
-
 
 {% block content %}
 <div class="container">
     <h2 class="mb-4">Manage Attendance: {{ opportunity.title }}</h2>
     <p>
-        <strong>Date:</strong> {{ opportunity.date|date:"l, F d, Y \\a\\t g:i A" }}<br>
+        <strong>Date:</strong> {{ opportunity.date|date:"l, F d, Y \a\t h:i A" }}<br>
         <strong>Location:</strong> {{ opportunity.location }}
     </p>
 
@@ -23,7 +20,7 @@
             {% if applications %}
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Attendance List</h5>
-                    <a href="{% url 'applications:export_attendance_excel' opportunity.id %}" class="btn btn-sm btn-success">
+                    <a href="{% url 'export_attendance_excel' opportunity.id %}" class="btn btn-sm btn-success">
                         <i class="bi bi-file-earmark-excel"></i> Export to Excel
                     </a>
                 </div>
@@ -39,37 +36,37 @@
                         <tbody>
                             {% for application in applications %}
                                 {% with volunteer=application.volunteer %}
-                               
-                                {% with attendance=attendances|get_attendance:volunteer.id %}
-                                        <td>{{ volunteer.user.name }}</td>
-                                        <td>
-                                            {% if attendance %}
-                                                {% if attendance.status == 'checked_in' %}
-                                                    <span class="badge bg-info">Checked In</span>
-                                                {% elif attendance.status == 'completed' %}
-                                                    <span class="badge bg-success">Completed</span>
-                                                {% elif attendance.status == 'no_show' %}
-                                                    <span class="badge bg-warning">No Show</span>
+                                    {% with attendance=attendances|get_item:volunteer.id %}
+                                        <tr>
+                                            <td>{{ volunteer.user.name }}</td>
+                                            <td>
+                                                {% if attendance %}
+                                                    {% if attendance.status == 'checked_in' %}
+                                                        <span class="badge bg-info">Checked In</span>
+                                                    {% elif attendance.status == 'completed' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% elif attendance.status == 'no_show' %}
+                                                        <span class="badge bg-warning">No Show</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Checked In</span>
                                                 {% endif %}
-                                            {% else %}
-                                                <span class="badge bg-secondary">Not Checked In</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if not attendance %}
-                                                <button class="btn btn-sm btn-primary check-in-btn" 
-                                                       data-volunteer-id="{{ volunteer.id }}"
-                                                       data-opportunity-id="{{ opportunity.id }}">
-                                                    Check In
-                                                </button>
-                                            {% elif attendance.status == 'checked_in' %}
-                                                <button class="btn btn-sm btn-success check-out-btn"
-                                                       data-attendance-id="{{ attendance.id }}">
-                                                    Check Out
-                                                </button>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td>
+                                                {% if not attendance %}
+                                                    <button class="btn btn-sm btn-primary check-in-btn" 
+                                                           data-volunteer-id="{{ volunteer.id }}"
+                                                           data-opportunity-id="{{ opportunity.id }}">
+                                                        Check In
+                                                    </button>
+                                                {% elif attendance.status == 'checked_in' %}
+                                                    <button class="btn btn-sm btn-success check-out-btn"
+                                                           data-attendance-id="{{ attendance.id }}">
+                                                        Check Out
+                                                    </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
                                     {% endwith %}
                                 {% endwith %}
                             {% endfor %}
@@ -82,75 +79,14 @@
         </div>
     </div>
 </div>
-
-<!-- Check-in Modal -->
-<div class="modal fade" id="checkInModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Check In Volunteer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="checkInForm" method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select id="status" class="form-select">
-                            <option value="checked_in">Checked In</option>
-                            <option value="no_show">No Show</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea id="notes" class="form-control" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="submitCheckIn">Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Check-out Modal -->
-<div class="modal fade" id="checkOutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Check Out Volunteer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="checkOutForm" method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="hours_contributed" class="form-label">Hours Contributed</label>
-                        <input type="number" step="0.5" min="0" class="form-control" id="hours_contributed" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="checkout_notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="checkout_notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="submitCheckOut">Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let checkInModal = new bootstrap.Modal(document.getElementById('checkInModal'));
-    let currentVolunteerId, currentOpportunityId;
+    let checkOutModal = new bootstrap.Modal(document.getElementById('checkOutModal'));
+    let currentVolunteerId, currentOpportunityId, currentAttendanceId;
     
     document.querySelectorAll('.check-in-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -161,42 +97,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     document.getElementById('submitCheckIn').addEventListener('click', function() {
-        const status = document.getElementById('status').value;
-        const notes = document.getElementById('notes').value;
-        
-        fetch(`/applications/check-in/${currentOpportunityId}/${currentVolunteerId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({status: status, notes: notes})
-    })
-        .then(response => response.json())
-        .then(data => window.location.reload());
+        fetch(`/check-in/${currentOpportunityId}/${currentVolunteerId}`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: new FormData(document.getElementById('checkInForm'))
+        }).then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during check-in.');
+        });
     });
-
-    let checkOutModal = new bootstrap.Modal(document.getElementById('checkOutModal'));
-    let currentAttendanceId;
-
+    
     document.querySelectorAll('.check-out-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             currentAttendanceId = this.dataset.attendanceId;
             checkOutModal.show();
         });
     });
-
+    
     document.getElementById('submitCheckOut').addEventListener('click', function() {
-        const hours = document.getElementById('hours_contributed').value;
-        const notes = document.getElementById('checkout_notes').value;
-        
-        fetch(`/check-out/${currentAttendanceId}/`, {
+        fetch(`/check-out/${currentAttendanceId}`, {
             method: 'POST',
-            headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
-            body: JSON.stringify({hours_contributed: hours, notes: notes})
-        })
-        .then(response => response.json())
-        .then(data => window.location.reload());
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            body: new FormData(document.getElementById('checkOutForm'))
+        }).then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during check-out.');
+        });
     });
 });
 </script>

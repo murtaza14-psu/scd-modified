@@ -28,18 +28,18 @@
 
                 <form method="POST" class="needs-validation" novalidate>
                     {% csrf_token %}
+                    
                     <div class="mb-4">
                         {{ form.message.label_tag }}
                         {{ form.message }}
-                        {% if form.message.errors %}
-                            {% for error in form.message.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
-                        {% endif %}
+                        {% for error in form.message.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
                     </div>
+                    
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">Submit Application</button>
-                        <a href="{% url 'opportunities:opportunities' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{% url 'opportunities:list' %}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

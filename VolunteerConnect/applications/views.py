@@ -1,137 +1,188 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
-from django.core.exceptions import ObjectDoesNotExist
-import json
-import csv
-from.forms import *
-from .models import Application, Attendance
-from opportunities.models import Opportunity
-from authentication.models import VolunteerProfile
+from .models import Application, Opportunity, Attendance
+from .forms import AttendanceForm, AttendanceCheckoutForm
+import pandas as pd
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
+from django.template.loader import get_template
 
 
-@login_required
-def apply_opportunity(request, opportunity_id):
-    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-
-    try:
-        volunteer_profile = request.user.volunteer_profile
-    except ObjectDoesNotExist:
-        messages.error(request, "You need to create a volunteer profile before applying.")
-        return redirect('opportunities:opportunities')
-
-    if hasattr(request.user, "role") and request.user.role != 'volunteer':
-        messages.error(request, "Only volunteers can apply for opportunities.")
-        return redirect('opportunities:opportunities')
-
-    if request.method == "POST":
-        form = ApplicationForm(request.POST)
-        if form.is_valid():
-            application = form.save(commit=False)
-            application.volunteer = volunteer_profile
-            application.opportunity = opportunity
-            application.save()
-            messages.success(request, "Application submitted successfully!")
-            return redirect('opportunities:opportunities')
-
-    else:
-        form = ApplicationForm()
-
-    return render(request, "apply.html", {"form": form, "opportunity": opportunity})
-
-@login_required
-def manage_opportunity(request, opportunity_id):
-    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-    applications = Application.objects.filter(opportunity=opportunity)
-    
-    # Convert attendances into a dictionary for direct access
-    attendances = {attendance.volunteer.id: attendance for attendance in Attendance.objects.filter(opportunity=opportunity)}
-
-    return render(request, 'manage.html', {
-        'opportunity': opportunity,
-        'applications': applications,
-        'attendances': attendances,  # This is now a dictionary
-    })
-
-
-
-@login_required
-def check_in(request, opportunity_id, volunteer_id):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            status = data.get("status", "checked_in")
-            notes = data.get("notes", "")
-
-            opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-            volunteer = get_object_or_404(VolunteerProfile, id=volunteer_id)
-
-            attendance, created = Attendance.objects.get_or_create(
-                volunteer=volunteer,
-                opportunity=opportunity,
-                defaults={"status": status, "notes": notes, "check_in_time": now()}
-            )
-
-            if not created:
-                attendance.status = status
-                attendance.notes = notes
-                attendance.check_in_time = now()
-                attendance.save()
-
-            return JsonResponse({"success": True, "message": "Checked in successfully!"})
-        except Exception as e:
-            print("Error:", e)  # Log error to the console
-            return JsonResponse({"success": False, "message": str(e)}, status=400)
-
-    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
-
-
-@login_required
-def check_out(request, attendance_id):
-    """Handles volunteer check-out."""
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            hours_contributed = float(data.get("hours_contributed", 0))
-            notes = data.get("notes", "")
-
-            attendance = get_object_or_404(Attendance, id=attendance_id)
-
-            attendance.status = "completed"
-            attendance.check_out_time = now()
-            attendance.hours_contributed = hours_contributed
-            attendance.notes = notes
-            attendance.save()
-
-            return JsonResponse({"success": True, "message": "Checked out successfully!"})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=400)
-    
-    return JsonResponse({"success": False, "message": "Invalid request"}, status=400)
 
 
 @login_required
 def export_attendance_excel(request, opportunity_id):
-    """Exports attendance data to a CSV file."""
+    if request.user.role != 'ngo':
+        messages.error(request, "Access denied")
+        return redirect("home")
+
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
-    attendance_records = Attendance.objects.filter(opportunity=opportunity)
 
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = f'attachment; filename="{opportunity.title}_attendance.csv"'
+    # Check if the logged-in NGO owns this opportunity
+    if opportunity.ngo.id != request.user.ngo_profile.id:
+        messages.error(request, "Access denied")
+        return redirect("home")
 
-    writer = csv.writer(response)
-    writer.writerow(["Volunteer", "Status", "Check-in Time", "Check-out Time", "Hours Contributed", "Notes"])
+    # Get all accepted applications for the opportunity
+    applications = Application.objects.filter(
+        opportunity_id=opportunity_id, status="accepted"
+    )
 
-    for record in attendance_records:
-        writer.writerow([
-            record.volunteer.user.username,
-            record.status,
-            record.check_in_time.strftime('%Y-%m-%d %H:%M:%S') if record.check_in_time else "",
-            record.check_out_time.strftime('%Y-%m-%d %H:%M:%S') if record.check_out_time else "",
-            record.hours_contributed or "0",
-            record.notes
-        ])
+    # Get attendance records
+    attendances = {a.volunteer_id: a for a in Attendance.objects.filter(opportunity_id=opportunity_id)}
 
+    # Prepare data for Excel
+    data = []
+    for app in applications:
+        volunteer = app.volunteer
+        attendance = attendances.get(volunteer.id)
+
+        row = {
+            "Volunteer Name": volunteer.user.name,
+            "Email": volunteer.user.email,
+            "Status": "Not Checked In",
+            "Check-in Time": attendance.check_in_time.strftime('%Y-%m-%d %H:%M') if attendance and attendance.check_in_time else '',
+            "Check-out Time": attendance.check_out_time.strftime('%Y-%m-%d %H:%M') if attendance and attendance.check_out_time else '',
+            "Hours Contributed": attendance.hours_contributed if attendance and attendance.hours_contributed else '',
+            "Notes": attendance.notes if attendance and attendance.notes else ''
+        }
+
+        if attendance:
+            row["Status"] = attendance.status.replace("_", " ").title()
+
+        data.append(row)
+
+    # Create a Pandas DataFrame
+    df = pd.DataFrame(data)
+
+    # Create an Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, sheet_name="Attendance", index=False)
+
+        # Auto-adjust column width
+        worksheet = writer.sheets["Attendance"]
+        for idx, col in enumerate(df.columns):
+            col_letter = get_column_letter(idx + 1)
+            max_length = max(df[col].astype(str).str.len().max(), len(col)) + 2
+            worksheet.column_dimensions[col_letter].width = max_length
+
+    output.seek(0)
+
+    # Generate filename
+    filename = f"attendance_{opportunity.title.replace(' ', '_')}_{now().strftime('%Y%m%d')}.xlsx"
+
+    # Return the file as an HTTP response
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+
+@login_required
+def apply_opportunity(request, application_id):
+    if request.user.role != 'ngo':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    application = get_object_or_404(Application, id=application_id)
+    
+    if application.opportunity.ngo.id != request.user.ngo_profile.id:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        if status not in ['accepted', 'rejected', 'pending']:
+            return JsonResponse({'error': 'Invalid status'}, status=400)
+        
+        application.status = status
+        application.save()
+        return JsonResponse({'status': 'success', 'new_status': status})
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def manage_opportunity(request, opportunity_id):
+    if request.user.role != 'ngo':
+        messages.error(request, 'Only NGOs can manage attendance')
+        return redirect('home')
+    
+    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
+    
+    if opportunity.ngo.id != request.user.ngo_profile.id:
+        messages.error(request, 'You can only manage attendance for your own opportunities')
+        return redirect('home')
+    
+    applications = Application.objects.filter(opportunity_id=opportunity_id, status='accepted')
+    attendances = {a.volunteer.id: a for a in Attendance.objects.filter(opportunity_id=opportunity_id)}
+    
+    attendances = {att.volunteer.id: att for att in Attendance.objects.filter(opportunity=opportunity)}
+
+    return render(request, 'manage.html', {
+        'opportunity': opportunity,
+        'applications': applications,
+        'attendances': attendances,
+        'form': AttendanceForm()
+    })
+
+@login_required
+@csrf_exempt
+def check_in(request, opportunity_id, volunteer_id):
+    if request.user.role != 'ngo':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
+    
+    if opportunity.ngo.id != request.user.ngo_profile.id:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    if Attendance.objects.filter(opportunity_id=opportunity_id, volunteer_id=volunteer_id).exists():
+        return JsonResponse({'error': 'Volunteer already checked in'}, status=400)
+    
+    form = AttendanceForm(request.POST)
+    if form.is_valid():
+        attendance = form.save(commit=False)
+        attendance.volunteer_id = volunteer_id
+        attendance.opportunity_id = opportunity_id
+        attendance.save()
+        return JsonResponse({'status': 'success', 'attendance_id': attendance.id})
+    
+    return JsonResponse({'error': 'Invalid form data'}, status=400)
+
+@login_required
+@csrf_exempt
+def check_out(request, attendance_id):
+    if request.user.role != 'ngo':
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    attendance = get_object_or_404(Attendance, id=attendance_id)
+    opportunity = get_object_or_404(Opportunity, id=attendance.opportunity_id)
+    
+    if opportunity.ngo.id != request.user.ngo_profile.id:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    form = AttendanceCheckoutForm(request.POST)
+    if form.is_valid():
+        try:
+            hours = float(form.cleaned_data['hours_contributed'])
+            if hours < 0:
+                return JsonResponse({'error': 'Hours must be positive'}, status=400)
+            
+            attendance.check_out_time = now()
+            attendance.hours_contributed = hours
+            attendance.status = 'completed'
+            attendance.notes = form.cleaned_data['notes']
+            attendance.save()
+            
+            return JsonResponse({'status': 'success'})
+        except ValueError:
+            return JsonResponse({'error': 'Invalid hours format'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid form data'}, status=400)

@@ -120,3 +120,53 @@
     </div>
 </div>
 {% endblock %}
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".status-update-btn").forEach((button) => {
+        button.addEventListener("click", function () {
+            let applicationId = this.dataset.applicationId; // Get application ID
+            let newStatus = this.dataset.status; // Get new status ('accepted' or 'rejected')
+
+            let updateUrl = `{% url 'applications:apply_opportunity' 99999 %}`.replace("99999", applicationId); // Correct URL
+
+            fetch(updateUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}", // CSRF token for security
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `status=${newStatus}`, // Sending status data
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.status === "success") {
+                        let parentDiv = button.closest(".card-body");
+                        let badge = parentDiv.querySelector(".badge");
+
+                        // Change badge color and text
+                        if (newStatus === "accepted") {
+                            badge.className = "badge bg-success";
+                            badge.textContent = "Accepted";
+                        } else if (newStatus === "rejected") {
+                            badge.className = "badge bg-danger";
+                            badge.textContent = "Rejected";
+                        }
+
+                        // Disable buttons after updating
+                        parentDiv
+                            .querySelectorAll(".status-update-btn")
+                            .forEach((btn) => (btn.disabled = true));
+                    } else {
+                        alert("Error updating status: " + data.error);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred.");
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

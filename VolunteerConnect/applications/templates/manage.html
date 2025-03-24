@@ -20,7 +20,7 @@
             {% if applications %}
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Attendance List</h5>
-                    <a href="{% url 'export_attendance_excel' opportunity.id %}" class="btn btn-sm btn-success">
+                    <a href="{% url 'applications:export_attendance_excel' opportunity.id %}" class="btn btn-sm btn-success">
                         <i class="bi bi-file-earmark-excel"></i> Export to Excel
                     </a>
                 </div>

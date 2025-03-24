@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
 from .models import Application, Opportunity, Attendance
-from .forms import AttendanceForm, AttendanceCheckoutForm
+from .forms import AttendanceForm, AttendanceCheckoutForm, ApplicationForm
 import pandas as pd
 from io import BytesIO
 from openpyxl import Workbook
@@ -13,21 +13,18 @@ from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 from django.template.loader import get_template
 
-
-
-
 @login_required
 def export_attendance_excel(request, opportunity_id):
     if request.user.role != 'ngo':
         messages.error(request, "Access denied")
-        return redirect("home")
+        return redirect("authentication:home")
 
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
 
     # Check if the logged-in NGO owns this opportunity
     if opportunity.ngo.id != request.user.ngo_profile.id:
         messages.error(request, "Access denied")
-        return redirect("home")
+        return redirect("authentication:home")
 
     # Get all accepted applications for the opportunity
     applications = Application.objects.filter(
@@ -86,39 +83,38 @@ def export_attendance_excel(request, opportunity_id):
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
-
 @login_required
-def apply_opportunity(request, application_id):
-    if request.user.role != 'ngo':
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-    
-    application = get_object_or_404(Application, id=application_id)
-    
-    if application.opportunity.ngo.id != request.user.ngo_profile.id:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-    
-    if request.method == 'POST':
-        status = request.POST.get('status')
-        if status not in ['accepted', 'rejected', 'pending']:
-            return JsonResponse({'error': 'Invalid status'}, status=400)
-        
-        application.status = status
+def apply_opportunity(request, opportunity_id):
+    if request.user.role != 'volunteer':  # Ensures only volunteers can apply
+        messages.error(request, "Only volunteers can apply to opportunities.")
+        return redirect("authentication:home")
+
+    opportunity = get_object_or_404(Opportunity, id=opportunity_id)
+    form = ApplicationForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        application = Application(
+            volunteer=request.user.volunteer_profile,  # Assuming user has a `volunteer_profile`
+            opportunity=opportunity,
+            message=form.cleaned_data['message']
+        )
         application.save()
-        return JsonResponse({'status': 'success', 'new_status': status})
-    
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        messages.success(request, "Application submitted successfully!")
+        return redirect("opportunities:opportunities")  # Adjust URL name as needed
+
+    return render(request, "apply.html", {"form": form, "opportunity": opportunity})
 
 @login_required
 def manage_opportunity(request, opportunity_id):
     if request.user.role != 'ngo':
         messages.error(request, 'Only NGOs can manage attendance')
-        return redirect('home')
+        return redirect('authentication:home')
     
     opportunity = get_object_or_404(Opportunity, id=opportunity_id)
     
     if opportunity.ngo.id != request.user.ngo_profile.id:
         messages.error(request, 'You can only manage attendance for your own opportunities')
-        return redirect('home')
+        return redirect('authentication:home')
     
     applications = Application.objects.filter(opportunity_id=opportunity_id, status='accepted')
     attendances = {a.volunteer.id: a for a in Attendance.objects.filter(opportunity_id=opportunity_id)}

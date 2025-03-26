@@ -3,6 +3,8 @@ from . import views
 app_name = 'applications'  #namespace for the app
 
 urlpatterns = [
+    
+    path("update-status/<int:application_id>/", views.update_application_status, name="update_application_status"),
     path('apply/<int:opportunity_id>/', views.apply_opportunity, name='apply_opportunity'),
     path('manage/<int:opportunity_id>/', views.manage_opportunity, name='manage_opportunity'),
     path('check-in/<int:opportunity_id>/<int:volunteer_id>/', views.check_in, name='check_in'),

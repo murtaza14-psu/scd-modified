@@ -182,3 +182,24 @@ def check_out(request, attendance_id):
             return JsonResponse({'error': 'Invalid hours format'}, status=400)
     
     return JsonResponse({'error': 'Invalid form data'}, status=400)
+
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from applications.models import Application
+
+@csrf_exempt  # Only if CSRF token issues occur (better to handle it properly)
+def update_application_status(request, application_id):
+    if request.method == "POST":
+        application = get_object_or_404(Application, id=application_id)
+
+        new_status = request.POST.get("status")
+        if new_status in ["accepted", "rejected"]:
+            application.status = new_status
+            application.save()
+            return JsonResponse({"status": "success", "new_status": new_status})
+        else:
+            return JsonResponse({"status": "error", "error": "Invalid status."})
+
+    return JsonResponse({"status": "error", "error": "Invalid request method."})

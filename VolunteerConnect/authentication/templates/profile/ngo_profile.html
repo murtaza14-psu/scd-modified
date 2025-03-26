@@ -125,18 +125,18 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".status-update-btn").forEach((button) => {
         button.addEventListener("click", function () {
-            let applicationId = this.dataset.applicationId; // Get application ID
-            let newStatus = this.dataset.status; // Get new status ('accepted' or 'rejected')
-
-            let updateUrl = `{% url 'applications:apply_opportunity' 99999 %}`.replace("99999", applicationId); // Correct URL
+            let applicationId = this.dataset.applicationId;
+            let newStatus = this.dataset.status;
+            
+            let updateUrl = `/applications/update-status/${applicationId}/`; // Ensure this URL matches your Django URL pattern
 
             fetch(updateUrl, {
                 method: "POST",
                 headers: {
-                    "X-CSRFToken": "{{ csrf_token }}", // CSRF token for security
+                    "X-CSRFToken": "{{ csrf_token }}",
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
-                body: `status=${newStatus}`, // Sending status data
+                body: `status=${newStatus}`,
             })
                 .then((response) => response.json())
                 .then((data) => {
@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         let parentDiv = button.closest(".card-body");
                         let badge = parentDiv.querySelector(".badge");
 
-                        // Change badge color and text
+                        // Update badge
                         if (newStatus === "accepted") {
                             badge.className = "badge bg-success";
                             badge.textContent = "Accepted";
@@ -153,20 +153,21 @@ document.addEventListener("DOMContentLoaded", function () {
                             badge.textContent = "Rejected";
                         }
 
-                        // Disable buttons after updating
-                        parentDiv
-                            .querySelectorAll(".status-update-btn")
-                            .forEach((btn) => (btn.disabled = true));
+                        // Disable buttons after update
+                        parentDiv.querySelectorAll(".status-update-btn").forEach((btn) => {
+                            btn.disabled = true;
+                        });
                     } else {
                         alert("Error updating status: " + data.error);
                     }
                 })
                 .catch((error) => {
                     console.error("Error:", error);
-                    alert("An error occurred.");
+                    alert("An error occurred while updating.");
                 });
         });
     });
 });
+
 </script>
 {% endblock %}

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 
-
 {% block title %}Manage Attendance - {{ opportunity.title }}{% endblock %}
 
 {% block content %}
@@ -54,14 +53,14 @@
                                             </td>
                                             <td>
                                                 {% if not attendance %}
-                                                    <button class="btn btn-sm btn-primary check-in-btn" 
-                                                           data-volunteer-id="{{ volunteer.id }}"
-                                                           data-opportunity-id="{{ opportunity.id }}">
+                                                    <button class="btn btn-sm btn-primary check-in-btn"
+                                                            data-volunteer-id="{{ volunteer.id }}"
+                                                            data-opportunity-id="{{ opportunity.id }}">
                                                         Check In
                                                     </button>
                                                 {% elif attendance.status == 'checked_in' %}
                                                     <button class="btn btn-sm btn-success check-out-btn"
-                                                           data-attendance-id="{{ attendance.id }}">
+                                                            data-attendance-id="{{ attendance.id }}">
                                                         Check Out
                                                     </button>
                                                 {% endif %}
@@ -83,59 +82,63 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let checkInModal = new bootstrap.Modal(document.getElementById('checkInModal'));
-    let checkOutModal = new bootstrap.Modal(document.getElementById('checkOutModal'));
-    let currentVolunteerId, currentOpportunityId, currentAttendanceId;
-    
-    document.querySelectorAll('.check-in-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentVolunteerId = this.dataset.volunteerId;
-            currentOpportunityId = this.dataset.opportunityId;
-            checkInModal.show();
-        });
-    });
-    
-    document.getElementById('submitCheckIn').addEventListener('click', function() {
-        fetch(`/check-in/${currentOpportunityId}/${currentVolunteerId}`, {
-            method: 'POST',
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            body: new FormData(document.getElementById('checkInForm'))
-        }).then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                window.location.reload();
-            } else {
-                alert('Error: ' + data.error);
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll(".check-in-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            let volId = this.dataset.volunteerId;
+            let oppId = this.dataset.opportunityId;
+
+            if (confirm(`Are you sure you want to check in this volunteer?`)) {
+                fetch(`/applications:check_in/${oppId}/${volId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    alert("An error occurred during check-in.");
+                });
             }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred during check-in.');
         });
     });
-    
-    document.querySelectorAll('.check-out-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentAttendanceId = this.dataset.attendanceId;
-            checkOutModal.show();
-        });
-    });
-    
-    document.getElementById('submitCheckOut').addEventListener('click', function() {
-        fetch(`/check-out/${currentAttendanceId}`, {
-            method: 'POST',
-            headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            body: new FormData(document.getElementById('checkOutForm'))
-        }).then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                window.location.reload();
-            } else {
-                alert('Error: ' + data.error);
+
+    document.querySelectorAll(".check-out-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            let attendanceId = this.dataset.attendanceId;
+
+            if (confirm("Are you sure you want to check out this volunteer?")) {
+                fetch(`/check-out/${attendanceId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    alert("An error occurred during check-out.");
+                });
             }
-        }).catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred during check-out.');
         });
     });
 });

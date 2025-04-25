@@ -6,13 +6,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now
 from .models import *
 from authentication.models import *
-from .forms import AttendanceForm, AttendanceCheckoutForm, ApplicationForm
+from .forms import AttendanceForm, ApplicationForm
 import pandas as pd
 from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 from django.template.loader import get_template
+from datetime import timedelta
+from opportunities.models import Opportunity
+
 
 @login_required
 def export_attendance_excel(request, opportunity_id):
@@ -147,7 +150,7 @@ def manage_opportunity(request, opportunity_id):
 
 from django.views.decorators.csrf import csrf_protect
 @login_required
-@csrf_protect  # Instead of @csrf_exempt, we use CSRF protection
+@csrf_protect  
 def check_in(request, opportunity_id, volunteer_id):
     if request.method != "POST":
         return JsonResponse({'error': 'Invalid request method'}, status=400)
@@ -178,33 +181,40 @@ def check_in(request, opportunity_id, volunteer_id):
 @login_required
 @csrf_exempt
 def check_out(request, attendance_id):
+    # Check if the user has the correct role (ngo)
     if request.user.role != 'ngo':
         return JsonResponse({'error': 'Unauthorized'}, status=403)
-    
+
+    # Retrieve the attendance and opportunity records
     attendance = get_object_or_404(Attendance, id=attendance_id)
     opportunity = get_object_or_404(Opportunity, id=attendance.opportunity_id)
-    
+
+    # Ensure the NGO profile matches the one of the logged-in user
     if opportunity.ngo.id != request.user.ngo_profile.id:
         return JsonResponse({'error': 'Unauthorized'}, status=403)
-    
-    form = AttendanceCheckoutForm(request.POST)
-    if form.is_valid():
-        try:
-            hours = float(form.cleaned_data['hours_contributed'])
-            if hours < 0:
-                return JsonResponse({'error': 'Hours must be positive'}, status=400)
-            
-            attendance.check_out_time = now()
-            attendance.hours_contributed = hours
-            attendance.status = 'completed'
-            attendance.notes = form.cleaned_data['notes']
-            attendance.save()
-            
-            return JsonResponse({'status': 'success'})
-        except ValueError:
-            return JsonResponse({'error': 'Invalid hours format'}, status=400)
-    
-    return JsonResponse({'error': 'Invalid form data'}, status=400)
+
+    # Ensure check-in time exists before proceeding
+    if not attendance.check_in_time:
+        return JsonResponse({'error': 'Check-in time is missing'}, status=400)
+
+    # Set the current time as check-out time
+    attendance.check_out_time = now()
+
+    # Calculate hours contributed based on the difference between check-in and check-out times
+    time_diff = attendance.check_out_time - attendance.check_in_time
+    hours_contributed = time_diff.total_seconds() / 3600  # Convert seconds to hours
+
+    # Handle cases where the time difference is negative (invalid check-out time)
+    if hours_contributed < 0:
+        return JsonResponse({'error': 'Invalid time difference'}, status=400)
+
+    # Assign calculated hours and update the attendance status
+    attendance.hours_contributed = round(hours_contributed, 2)  # Round to 2 decimal places
+    attendance.status = 'completed'
+    attendance.notes = "Automatically calculated hours"
+    attendance.save()
+
+    return JsonResponse({'status': 'success'})
 
 
 from django.http import JsonResponse

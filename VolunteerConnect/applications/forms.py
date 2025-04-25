@@ -23,10 +23,3 @@ class AttendanceForm(forms.Form):
         widget=forms.Select
     )
 
-class AttendanceCheckoutForm(forms.Form):
-    hours_contributed = forms.CharField(
-        label='Hours Contributed',
-        validators=[RegexValidator(regex=r'^\d+(\.\d{1,2})?$', message='Enter a valid number.')],
-        required=True
-    )
-    notes = forms.CharField(widget=forms.Textarea, required=False)

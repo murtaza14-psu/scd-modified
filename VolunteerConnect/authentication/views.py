@@ -5,8 +5,6 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-
-
 def home(request):
     return render(request, 'home.html')  # Render home.html
 

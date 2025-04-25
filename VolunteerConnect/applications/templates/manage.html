@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load custom_filters %}
-
 {% block title %}Manage Attendance - {{ opportunity.title }}{% endblock %}
 
 {% block content %}
@@ -84,65 +83,132 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll(".check-in-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            let volId = this.dataset.volunteerId;
-            let oppId = this.dataset.opportunityId;
-
-            if (confirm(`Are you sure you want to check in this volunteer?`)) {
-                fetch(`/applications/check-in/${oppId}/${volId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({})
-                }
-                )
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        window.location.reload();
-                    } else {
-                        alert("Error: " + data.error);
+        document.querySelectorAll(".check-in-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                let volId = this.dataset.volunteerId;
+                let oppId = this.dataset.opportunityId;
+        
+                Swal.fire({
+                    title: 'Check In?',
+                    text: 'Confirm volunteer check-in',
+                    icon: 'question',
+                    position: 'top',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    background: '#f0f0ff',
+                    color: '#4b0082', // dark purple text
+                    iconColor: '#6a0dad', // purple icon
+                    confirmButtonColor: '#6a0dad', // purple
+                    cancelButtonColor: '#1e90ff', // blue
+                    customClass: {
+                        popup: 'small-swal'
                     }
-                })
-                .catch(error => {
-                    console.error("Fetch error:", error);
-                    alert("An error occurred during check-in.");
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/applications/check-in/${oppId}/${volId}/`, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({})
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                Swal.fire({
+                                    title: 'Checked In!',
+                                    position: 'top',
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                    icon: 'success',
+                                    background: '#f0f0ff',
+                                    iconColor: '#6a0dad',
+                                    color: '#4b0082'
+                                });
+                                setTimeout(() => window.location.reload(), 1500);
+                            } else {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: data.error,
+                                    icon: 'error',
+                                    position: 'top',
+                                    background: '#fff0f5',
+                                    iconColor: '#ff1493',
+                                    color: '#800000'
+                                });
+                            }
+                        });
+                    }
                 });
-            }
-        });
+            });
+        });        
     });
-
     document.querySelectorAll(".check-out-btn").forEach(btn => {
         btn.addEventListener("click", function () {
             let attendanceId = this.dataset.attendanceId;
-
-            if (confirm("Are you sure you want to check out this volunteer?")) {
-                fetch(`/applications/check-out/${attendanceId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        window.location.reload();
-                    } else {
-                        alert("Error: " + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error("Fetch error:", error);
-                    alert("An error occurred during check-out.");
-                });
-            }
+    
+            Swal.fire({
+                title: 'Check Out Volunteer?',
+                text: "Are you sure you want to check out this volunteer?",
+                icon: 'question',
+                position: 'top',
+                iconColor: '#6a11cb',
+                showCancelButton: true,
+                confirmButtonColor: '#6a11cb',
+                cancelButtonColor: '#2575fc',
+                confirmButtonText: 'Yes, Check Out',
+                background: '#f0f2ff',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/applications/check-out/${attendanceId}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "success") {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top',
+                                icon: 'success',
+                                title: 'Volunteer checked out successfully',
+                                showConfirmButton: false,
+                                timer: 1500,
+                                background: '#6a11cb',
+                                color: '#fff'
+                            });
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top',
+                                icon: 'error',
+                                title: data.error || 'Something went wrong',
+                                showConfirmButton: false,
+                                timer: 2000,
+                                background: '#d32f2f',
+                                color: '#fff'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Fetch error:", error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops!',
+                            text: 'An error occurred during check-out.',
+                            confirmButtonColor: '#6a11cb'
+                        });
+                    });
+                }
+            });
         });
     });
-});
 </script>
 {% endblock %}

@@ -11,7 +11,7 @@
     <div class="col-md-6">
         <div class="input-group mb-3">
             <input type="text" id="opportunity-search" class="form-control" 
-                   placeholder="Search by title or description...">
+                   placeholder="Search by Ngo name or title or description...">
             <select id="location-filter" class="form-select">
                 <option value="">All Locations</option>
                 {% for location in locations %}
@@ -105,11 +105,12 @@ document.addEventListener('DOMContentLoaded', function() {
         opportunities.forEach(card => {
             const title = card.querySelector('.card-title').textContent.toLowerCase();
             const description = card.querySelector('.card-text').textContent.toLowerCase();
+            const ngo_name = card.querySelector('.card-subtitle').textContent.toLowerCase();
             const location = card.dataset.location;
 
             const matchesSearch = !searchTerm || 
                                 title.includes(searchTerm) || 
-                                description.includes(searchTerm);
+                                description.includes(searchTerm)||ngo_name.includes(searchTerm);
             const matchesLocation = !selectedLocation || 
                                   location === selectedLocation;
 

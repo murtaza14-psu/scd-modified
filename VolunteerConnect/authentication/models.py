@@ -97,3 +97,6 @@ class NGOProfile(models.Model):
 
     def __str__(self):
         return self.organization_name
+#
+#Email: adminadmin@gmail.com
+#pass: admin123

@@ -63,12 +63,6 @@ def createOpportunity(request):
         messages.error(request, 'Only users registered as NGOs can create opportunities.')
         return redirect('authentication:home')
 
-    # if ngo_profile.verification_status != 'approved':
-    #     print(3)
-    #     messages.error(request, 'Your NGO is not verified yet. Please wait for approval.')
-    #     return redirect('authentication:home')
-
-    # Handle the form submission
     if request.method == 'POST':
         form = OpportunityForm(request.POST)
         if form.is_valid():

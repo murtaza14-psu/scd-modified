@@ -37,9 +37,7 @@
                     {% if request.user.is_authenticated %}
                         {% if request.user.role == 'volunteer' %}
                             <li class="nav-item">
-                                <a class="nav-link" href="">
-                                    <i class="bi bi-clock-history"></i> My History
-                                </a>
+                               
                             </li>
                         {% elif request.user.role == 'ngo' %}
                             <li class="nav-item">
@@ -48,9 +46,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="">
-                                    <i class="bi bi-bar-chart"></i> Impact Reports
-                                </a>
+                               
                             </li>
 
                         {% endif %}
